@@ -21,24 +21,36 @@ def edit_pdf(uploaded_file):
 
         page = doc[page_num]
         
+        # Display the current page
+        pix = page.get_pixmap()
+        img_bytes = pix.tobytes()
+        st.image(img_bytes, caption=f"Page {page_num + 1}", use_column_width=True)
+        
         # Get page elements
-        st.write("\nAvailable elements on this page:")
+        st.write("\nSelect elements to remove from this page:")
         action = st.selectbox("What would you like to edit/remove?", 
                             ["Select an action", "Text", "Images", "Links"])
         
         if action == "Text":
             # Handle text editing
             text_instances = page.get_text("words")
-            st.write("\nText content on this page:")
-            text_options = ["Select text to remove"] + [text[4] for text in text_instances]
-            selected_text = st.selectbox("Select text to remove:", text_options)
-            
-            if selected_text != "Select text to remove" and st.button("Remove Selected Text"):
-                text_idx = text_options.index(selected_text) - 1
-                text_instance = text_instances[text_idx]
-                rect = fitz.Rect(text_instance[:4])
-                page.add_redact_annot(rect)
-                page.apply_redactions()
+            if text_instances:
+                st.write("\nClick on text to remove:")
+                text_options = ["Select text to remove"] + [text[4] for text in text_instances]
+                selected_text = st.selectbox("Select text to remove:", text_options)
+                
+                if selected_text != "Select text to remove" and st.button("Remove Selected Text"):
+                    text_idx = text_options.index(selected_text) - 1
+                    text_instance = text_instances[text_idx]
+                    rect = fitz.Rect(text_instance[:4])
+                    page.add_redact_annot(rect)
+                    page.apply_redactions()
+                    # Refresh the page display
+                    pix = page.get_pixmap()
+                    img_bytes = pix.tobytes()
+                    st.image(img_bytes, caption=f"Page {page_num + 1} (Updated)", use_column_width=True)
+            else:
+                st.write("No text found on this page")
         
         elif action == "Images":
             # Handle image removal
@@ -50,6 +62,10 @@ def edit_pdf(uploaded_file):
                         rect = page.get_image_bbox(img[0])
                         page.add_redact_annot(rect)
                         page.apply_redactions()
+                    # Refresh the page display
+                    pix = page.get_pixmap()
+                    img_bytes = pix.tobytes()
+                    st.image(img_bytes, caption=f"Page {page_num + 1} (Updated)", use_column_width=True)
             else:
                 st.write("No images found on this page")
         
@@ -61,6 +77,10 @@ def edit_pdf(uploaded_file):
                 if st.button("Remove all links"):
                     for link in links:
                         page.delete_link(link)
+                    # Refresh the page display
+                    pix = page.get_pixmap()
+                    img_bytes = pix.tobytes()
+                    st.image(img_bytes, caption=f"Page {page_num + 1} (Updated)", use_column_width=True)
             else:
                 st.write("No links found on this page")
         
