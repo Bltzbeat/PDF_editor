@@ -2,3 +2,10 @@ PyPDF2
 PyMuPDF
 tk
 streamlit
+numpy
+pandas
+sentence-transformers
+scikit-learn
+torch
+openpyxl
+pickle5 
